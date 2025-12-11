@@ -1,16 +1,13 @@
 import os
 from pathlib import Path
 
-from langchain_community.document_loaders import TextLoader, CSVLoader, PyPDFLoader
+from langchain_community.document_loaders import TextLoader, CSVLoader, PyMuPDFLoader, Docx2txtLoader
 from langchain_core.documents import Document
 
 from src.model.document_type import DocumentType
 
 
 class DocumentLoader:
-
-    def __init__(self):
-        self.documents = []
 
     def load_documents(self, directory: str, existing_file_names: set[str]) -> list[Document]:
         """Load documents from a list of directories.
@@ -23,12 +20,12 @@ class DocumentLoader:
 
         print(f"Documents found: {found_documents}")
 
-        self._load_all_documents(found_documents, existing_file_names)
+        documents = self._load_all_documents(found_documents, existing_file_names)
 
-        print(f"Loaded {len(self.documents)} documents from {directory}")
-        return self.documents
+        print(f"Loaded {len(documents)} documents from {directory}")
+        return documents
 
-    def _load_all_documents(self, documents: list[Path], existing_file_names: set[str]):
+    def _load_all_documents(self, documents: list[Path], existing_file_names: set[str]) -> list[Document]:
         all_loaded_documents = []
 
         for document in documents:
@@ -37,13 +34,16 @@ class DocumentLoader:
                 continue
             elif document.name.endswith(".pdf"):
                 doc_type = DocumentType.PDF
-                loader = PyPDFLoader(str(document))
+                loader = PyMuPDFLoader(str(document))
             elif document.name.endswith(".txt"):
                 doc_type = DocumentType.TEXT
                 loader = TextLoader(str(document))
             elif document.name.endswith(".csv"):
                 doc_type = DocumentType.CSV
                 loader = CSVLoader(str(document))
+            elif document.name.endswith(".docx"):
+                doc_type = DocumentType.WORD
+                loader = Docx2txtLoader(str(document))
             else:
                 continue
 
@@ -56,18 +56,20 @@ class DocumentLoader:
             all_loaded_documents.extend(loaded_documents)
 
         if all_loaded_documents:
-            self.documents.extend(all_loaded_documents)
             print(f"Successfully loaded {len(all_loaded_documents)} documents")
+            return all_loaded_documents
+
+        print("No documents loaded")
+        return []
 
     def _get_documents_recursively(self, directory: str) -> list[Path]:
-        dir_items = os.listdir(directory)
-        files = []
+        path = Path(directory)
+        files: list[Path] = []
 
-        for dir_item in dir_items:
-            if os.path.isdir(os.path.join(directory, dir_item)):
-                files.extend(self._get_documents_recursively(os.path.join(directory, dir_item)))
-            else:
-                if dir_item.endswith(".txt") or dir_item.endswith(".csv") or dir_item.endswith(".pdf"):
-                    files.append(Path(os.path.join(directory, dir_item)))
+        for entry in path.iterdir():
+            if entry.is_dir():
+                files.extend(self._get_documents_recursively(str(entry)))
+            elif entry.is_file() and entry.suffix.lower() in DocumentType.get_file_extensions():
+                files.append(entry)
 
         return files

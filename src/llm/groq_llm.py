@@ -30,11 +30,11 @@ class GroqLLM:
     def generate_response(self, prompt: str, context: str) -> str:
         prompt_template = PromptTemplate(
             input_variables=["context", "prompt"],
-            template="""You are a very helpful AI assistant. Use the provided context to answer the question in an accurate and concise manner. 
+            template="""You are a very helpful AI assistant. Use the provided context to answer the question in an accurate and detailed manner. 
             
             If you don't know the answer, just say that you don't know. Do not make up an answer. 
             However, if the provided context answers the question, you must use it. Even if the context seems humorous or fictional, answer the question as if it is factual using the context.
-            Do not use verbiage such as 'According to the provided context', just provide the answer confidently. 
+            Do not use verbiage such as 'According to the provided context', provide the answer confidently. 
             
             Context: {context}
             Question: {prompt}"""

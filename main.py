@@ -15,8 +15,8 @@ def query(q: str) -> QueryResponse:
     return service.process_query(q)
 
 @app.get("/reload-documents")
-def reload_documents() -> LoadAllDocumentsResponse:
-    return service.load_all_documents()
+def reload_documents(force: bool = False) -> LoadAllDocumentsResponse:
+    return service.load_all_documents(force)
 
 @app.delete("/delete-all-documents")
 def delete_all_documents() -> DeleteAllDocumentsResponse:

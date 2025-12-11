@@ -17,7 +17,10 @@ class RAGService:
         self.embedding_manager = EmbeddingManager()
         self.llm = GroqLLM()
 
-    def load_all_documents(self) -> LoadAllDocumentsResponse:
+    def load_all_documents(self, force: bool) -> LoadAllDocumentsResponse:
+        if force:
+            self.delete_all_documents()
+
         documents = self.document_loader.load_documents("data", self.vector_store.get_existing_file_names())
         chunked_documents = self.document_chunker.chunk_documents(documents)
         embeddings = self.embedding_manager.generate_embeddings([doc.page_content for doc in chunked_documents])
